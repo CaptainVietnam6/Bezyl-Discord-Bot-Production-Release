@@ -3,7 +3,8 @@ Copyright (©) 2021 Kiet Pham <kiet.riley2005@gmail.com>
 This software/program has a copyright license, more information is in the 'LICENSE' file
 IF YOU WANT TO USE/COPY/MODIFY/REPRODUCE/RE-DISTRIBUTE THIS PROGRAM, YOU MUST INCLUDE A COPY OF THE LICENSE
 
-Author Name: Kiet Pham, Junle Yan
+Author Name(s): Kiet Pham
+Co-Author Name(s): Junle Yan
 Author Contact: kiet.riley2005@gmail.com, yanjunlereal@gmail.com
 Discord: CaptainVietnam6#0001, wholefood_doufu#9523
 Discord Server: https://discord.gg/3z76p8H5yj
@@ -36,6 +37,8 @@ from PyDictionary import PyDictionary
 #imports from other files
 from keep_alive import keep_alive
 from BOT_TOKEN import BOT_TOKEN
+from constants import bot_color
+from constants import requested_by
 
 
 '''REFER TO NOTES OR MANUAL & INFORMATIVE SHEET AND USE THE INDEX TO UNDERSTAND AND SEE WHERE CERTAIN COMMANDS ARE'''
@@ -48,7 +51,7 @@ intents = discord.Intents().all()
 
 #BOT PREFIX
 bot_prefixes = ["bz ", "BZ ", "Bz ", "bZ ", "bz", "BZ", "Bz", "bZ"]
-client = commands.Bot(command_prefix = bot_prefixes, intents = intents)
+client = commands.Bot(command_prefix = bot_prefixes, case_insensitive = True, intents = intents)
 
 
 #REMOVES THE DEFAULT HELP COMMAND
@@ -59,7 +62,7 @@ client = commands.Bot(command_prefix = bot_prefixes, intents = intents)
 @client.command()
 async def cogs_load(ctx, extension):
     user_id = ctx.author.id
-    if user_id == 467451098735837186:
+    if user_id == 467451098735837186 or user_id == 597621743070216203:
         client.load_extension(f"cogs.{extension}")
     else:
         await ctx.send("Sorry, only developers of the bot can use this command")
@@ -69,7 +72,7 @@ async def cogs_load(ctx, extension):
 @client.command()
 async def cogs_unload(ctx, extension):
     user_id = ctx.author.id
-    if user_id == 467451098735837186:
+    if user_id == 467451098735837186 or user_id == 597621743070216203:
         client.unload_extension(f"cogs.{extension}")
     else:
         await ctx.send("Sorry, only developers of the bot can use this command")
@@ -79,7 +82,7 @@ async def cogs_unload(ctx, extension):
 @client.command()
 async def cogs_reload(ctx, extension):
     user_id = ctx.author.id
-    if user_id == 467451098735837186:
+    if user_id == 467451098735837186 or user_id == 597621743070216203:
         client.reload_extension(f"cogs.{extension}")
     else:
         await ctx.send("Sorry, only developers of the bot can use this command")
@@ -88,7 +91,7 @@ async def cogs_reload(ctx, extension):
 #CONNECTS COGS FILE 
 for filename in os.listdir("./"):
     if filename.endswith("cog.py"):
-        client.load_extension(f"{filename[:-3]}") #this will remove the last 7 characters off of the name "_cog.py"
+        client.load_extension(f"{filename[:-3]}") #this will remove the last 3 characters off of the name ".py"
 
 
 #ON READY AND ONLINE ALERT
@@ -113,13 +116,45 @@ async def on_ready():
 #RETURNS THE BOT'S PING IN MILLISECONDS
 @client.command()
 async def ping(ctx):
-    await ctx.send(f"Pong! Bot's ping is {round(client.latency * 1000)}ms")
+    await ctx.trigger_typing()
     print(f"ping: {round(client.latency * 1000)}ms")
+    embed = discord.Embed(
+        title = "Latency",
+        description = "Successfully Received Message",
+        color = bot_color
+    )
+    embed.add_field(
+        name = f"Websocket Latency:", 
+        value = f"`{round(client.latency * 1000)}ms`", 
+        inline = False
+    )
+    requested_by(ctx, embed)
+    await asyncio.sleep(float(0.15))
+    await ctx.send(embed = embed)
 
 
-#DEFINES BOT COLOR TO BE USED IN EMBEDS
-#import into other files for use
-bot_color = 0xff0000
+#SERVER COLOR HEX CODE REMINDER THINGY
+@client.command(aliases = ["botcolor"])
+async def _bothexcode(ctx):
+    await ctx.trigger_typing()
+    await asyncio.sleep(float(0.15))
+    await ctx.send("The bot theme hex code is **#ff0000** (this is the average colour of the gradient in our pfp)")
+
+
+#SEND INVITE LINK FOR BOT
+@client.command(aliases = ["invite"])
+async def _invite(ctx):
+    await ctx.trigger_typing()
+    await asyncio.sleep(float(0.15))
+    await ctx.send("https://discord.com/api/oauth2/authorize?client_id=839638438055903242&permissions=0&scope=bot")
+
+
+#SEND LINK TO DOCS
+@client.command(aliases = ["docs"])
+async def _documentation(ctx):
+    await ctx.trigger_typing()
+    await asyncio.sleep(float(0.15))
+    await ctx.send("https://docs.google.com/document/d/1dNQBnMU0YK7g8-pjC77wViGKHBHNnE1NKbocAIf5HBA/edit?usp=sharing")
 
 
 #KEEP ALIVE COMMAND FOR WEBSERVER
@@ -127,3 +162,4 @@ keep_alive()
 
 #BOT TOKEN TO CONNECT TO DISCORD'S API
 client.run(BOT_TOKEN) #TOKEN CAN BE FOUND IN HIDDEN ENVIROMENTAL VARIABLES FILE
+ 
