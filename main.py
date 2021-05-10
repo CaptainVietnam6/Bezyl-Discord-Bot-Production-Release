@@ -39,6 +39,8 @@ from keep_alive import keep_alive
 from BOT_TOKEN import BOT_TOKEN
 from constants import bot_color
 from constants import requested_by
+from constants import auto_color
+from constants import bot_typing
 
 
 '''REFER TO NOTES OR MANUAL & INFORMATIVE SHEET AND USE THE INDEX TO UNDERSTAND AND SEE WHERE CERTAIN COMMANDS ARE'''
@@ -97,7 +99,7 @@ for filename in os.listdir("./"):
 #ON READY AND ONLINE ALERT
 @client.event
 async def on_ready():
-    await client.change_presence(status = discord.Status.online, activity = discord.Game("Programmed by CaptainVietnam6#0001 in Python 3.8.2"))
+    await client.change_presence(status = discord.Status.online, activity = discord.Game("Bot in Development"))
     await asyncio.sleep(float(1.5))
     print("Bezyl is online and ready")
 
@@ -116,8 +118,8 @@ async def on_ready():
 #RETURNS THE BOT'S PING IN MILLISECONDS
 @client.command()
 async def ping(ctx):
-    await ctx.trigger_typing()
     print(f"ping: {round(client.latency * 1000)}ms")
+    embed = discord.Embed()
     embed = discord.Embed(
         title = "Latency",
         description = "Successfully Received Message",
@@ -129,31 +131,30 @@ async def ping(ctx):
         inline = False
     )
     requested_by(ctx, embed)
-    await asyncio.sleep(float(0.15))
+    auto_color(ctx, embed)
+
+    await bot_typing(ctx, 0.15)
     await ctx.send(embed = embed)
 
 
 #SERVER COLOR HEX CODE REMINDER THINGY
 @client.command(aliases = ["botcolor"])
 async def _bothexcode(ctx):
-    await ctx.trigger_typing()
-    await asyncio.sleep(float(0.15))
+    await bot_typing(ctx, 0.15)
     await ctx.send("The bot theme hex code is **#ff0000** (this is the average colour of the gradient in our pfp)")
 
 
 #SEND INVITE LINK FOR BOT
 @client.command(aliases = ["invite"])
 async def _invite(ctx):
-    await ctx.trigger_typing()
-    await asyncio.sleep(float(0.15))
+    await bot_typing(ctx, 0.15)
     await ctx.send("https://discord.com/api/oauth2/authorize?client_id=839638438055903242&permissions=0&scope=bot")
 
 
 #SEND LINK TO DOCS
 @client.command(aliases = ["docs"])
 async def _documentation(ctx):
-    await ctx.trigger_typing()
-    await asyncio.sleep(float(0.15))
+    await bot_typing(ctx, 0.15)
     await ctx.send("https://docs.google.com/document/d/1dNQBnMU0YK7g8-pjC77wViGKHBHNnE1NKbocAIf5HBA/edit?usp=sharing")
 
 
@@ -162,4 +163,3 @@ keep_alive()
 
 #BOT TOKEN TO CONNECT TO DISCORD'S API
 client.run(BOT_TOKEN) #TOKEN CAN BE FOUND IN HIDDEN ENVIROMENTAL VARIABLES FILE
- 

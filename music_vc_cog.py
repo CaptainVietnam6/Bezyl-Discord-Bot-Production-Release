@@ -23,6 +23,8 @@ from PyDictionary import PyDictionary
 
 #imports from other files
 from constants import bot_color
+from constants import auto_color
+from constants import bot_typing
 from constants import requested_by
 
 

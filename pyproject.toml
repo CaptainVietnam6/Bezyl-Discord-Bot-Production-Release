@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "Bezyl-Discord-Bot-Production-Release"
-version = "0.3.3"
+version = "0.5.1"
 description = "Bezyl is a multi-purpose generalised Discord Bot that is based off of previous bots made by CaptainVietnam6, this time with more capabilities and a new, enhanced, and rebuilt code structure."
-authors = ["Kiet Pham <kiet.riley2005@gmail.com>"]
+authors = ["Kiet Pham <kiet.riley2005@gmail.com>, Junle Yan <yanjunlereal@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
