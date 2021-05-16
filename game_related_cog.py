@@ -32,6 +32,7 @@ class Cogs(commands.Cog):
     def __init__(self, client):
         self.client = client
 
+    #COG FUNCTIONALITY TEST COMMAND
     @commands.command(aliases = ["cogs_game"])
     async def _cogs_game(self, ctx):
         await ctx.send("game related cogs works yay")

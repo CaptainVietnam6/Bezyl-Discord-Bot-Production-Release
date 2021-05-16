@@ -32,6 +32,7 @@ class Cogs(commands.Cog):
     def __init__(self, client):
         self.client = client
 
+    #COG FUNCTIONALITY TEST COMMAND
     @commands.command(aliases = ["cogs_testbed", "cogs_test_bed"])
     async def _cogs_testbed(self, ctx):
         await ctx.send("testbed cog works yay")

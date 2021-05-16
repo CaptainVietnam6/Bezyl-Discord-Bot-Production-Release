@@ -133,6 +133,7 @@ async def ping(ctx):
 
 
 #SERVER COLOR HEX CODE REMINDER THINGY
+#color not finalised; subject to change
 @client.command(aliases = ["botcolor"])
 async def _bothexcode(ctx):
     await bot_typing(ctx, 0.15)

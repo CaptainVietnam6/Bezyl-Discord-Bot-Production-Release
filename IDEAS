@@ -1,5 +1,7 @@
-1. Auto change embed color based on the highest role
+1. Auto change embed color based on the highest role - DONE
 
 2. Database for changing prefix
 
-3. 
+3. Error messages for commands
+
+4. switch licenses upon release; maybe to GNU
