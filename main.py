@@ -36,7 +36,7 @@ from PyDictionary import PyDictionary
 
 #imports from other files
 from keep_alive import keep_alive
-from BOT_TOKEN import BOT_TOKEN
+#from BOT_TOKEN import BOT_TOKEN #no longer needed, BOT_TOKEN now in main.py
 from constants import bot_color
 from constants import requested_by
 from constants import auto_color
@@ -57,7 +57,7 @@ client = commands.Bot(command_prefix = bot_prefixes, case_insensitive = True, in
 
 
 #REMOVES THE DEFAULT HELP COMMAND
-@client.remove_command("help")
+#@client.remove_command("help")
 
 
 #LOAD cog
@@ -121,14 +121,9 @@ async def ping(ctx):
     print(f"ping: {round(client.latency * 1000)}ms")
     embed = discord.Embed()
     embed = discord.Embed(
-        title = "Latency",
-        description = "Successfully Received Message",
+        title = "Websocket Latency:",
+        description = f"`{round(client.latency * 1000)}ms`",
         color = bot_color
-    )
-    embed.add_field(
-        name = f"Websocket Latency:", 
-        value = f"`{round(client.latency * 1000)}ms`", 
-        inline = False
     )
     requested_by(ctx, embed)
     auto_color(ctx, embed)
@@ -162,4 +157,7 @@ async def _documentation(ctx):
 keep_alive()
 
 #BOT TOKEN TO CONNECT TO DISCORD'S API
+#this is the bot's token and will be required for the IDE to connect with discord's API
+#get bot token from discord developer portal > applications > (your bot) > bot > copy token
+BOT_TOKEN = os.environ["BOT_TOKEN_HIDDEN"]
 client.run(BOT_TOKEN) #TOKEN CAN BE FOUND IN HIDDEN ENVIROMENTAL VARIABLES FILE

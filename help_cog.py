@@ -1,5 +1,5 @@
 #COGS WILL BE READ AND EXECUTEDIN MAIN.PY
-#This cog is for the soundboard category of commands
+#This cog is for the help directory related category of commands
 
 #imports related to discord or discord packages
 import discord
@@ -24,6 +24,7 @@ from PyDictionary import PyDictionary
 #imports from other files
 from constants import bot_color
 from constants import auto_color
+from constants import bot_typing
 from constants import requested_by
 
 
@@ -31,12 +32,9 @@ class Cogs(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    @commands.command(aliases = ["cogs_soundboard"])
-    async def _cogs_soundboard(self, ctx):
-        await ctx.send("soundboard cog works yay")
-
-    
-    
+    @commands.command(aliases = ["cogs_help"])
+    async def _cogs_help(self, ctx):
+        await ctx.send("help cog works yay")
 
 
 def setup(client):
