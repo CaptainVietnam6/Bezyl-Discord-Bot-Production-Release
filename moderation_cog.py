@@ -82,11 +82,20 @@ class Cogs(commands.Cog):
     
     #KICK COMMAND
     @commands.command(aliases = ["kick"])
-    @commands.has_permissions(kick_members = True)
-    async def _kick(self, ctx, member: discord.Member, *, reason = "None provided"):
+    #@commands.has_permissions(kick_members = True)
+    async def _kick(self, ctx, member: str, *, reason = "None provided"):
+        try: 
+            member = await discord.ext.commands.MemberConverter().convert(ctx, member)
+        except discord.ext.commands.errors.BadArgument:
+            try:
+                # fetch user with id if member not mention
+                member = await self.bot.fetch_user(int(member))
+            except:
+                return
+        
         embed = discord.Embed(
             title = "User Kicked",
-            description = f"Kicked User {member}\nReason: {reason}",
+            description = f"Kicked User <@{member}>\nReason: {reason}",
             color = bot_color
         )
         auto_color(ctx, embed) 
@@ -97,16 +106,23 @@ class Cogs(commands.Cog):
         await ctx.send(embed = embed)
 
     #error for kick commands
-    @_kick.error
-    async def _kick_error(self, ctx, error):
-        await bot_typing(ctx, 0.15)
-        await ctx.send("Error: No kick permissions or invalid parameter")
-
+    #@_kick.error
+    #async def _kick_error(self, ctx, error):
+        #await bot_typing(ctx, 0.15)
+        #await ctx.send("Error: No kick permissions or invalid parameter")
 
     #BAN COMMAND
-    @commands.command(aliases = ["BAN"])
+    @commands.command(aliases = ["ban"])
     @commands.has_permissions(ban_members = True)
-    async def _ban(self, ctx, member: discord.Member, *, reason = "None provided"):
+    async def _ban(self, ctx, member: str, *, reason = "None provided"):
+        try: 
+            member = await discord.ext.commands.MemberConverter().convert(ctx, member)
+        except discord.ext.commands.errors.BadArgument:
+            try:
+                # fetch user with id if member not mention
+                member = await self.bot.fetch_user(int(member))
+            except:
+                return
         embed = discord.Embed(
             title = "User Banned",
             description = f"Banned User {member}\nReason: {reason}",
@@ -125,6 +141,6 @@ class Cogs(commands.Cog):
         await bot_typing(ctx, 0.15)
         await ctx.send("Error: No kick permissions or invalid parameter")
 
-        
+
 def setup(client):
     client.add_cog(Cogs(client))
