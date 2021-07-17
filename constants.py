@@ -15,6 +15,7 @@ from os import system
 import random
 from random import randint
 import time
+import datetime
 import youtube_dl
 import shutil
 import asyncio
@@ -30,19 +31,26 @@ bot_color = 0xff0000
 
 
 #REQUESTED BY FOOTER FOR EMBEDS
-def requested_by(ctx, embed):
-    author_name = ctx.author.display_name
-    embed.set_footer(text = f"Requested by {author_name}")
+def requested_by(ctx, embed, verb = "Requested"):
+    author_name = ctx.author.name
+    embed.set_footer(text = f"{verb} by {author_name}", icon_url = ctx.author.avatar_url)
+    embed.timestamp = datetime.datetime.utcnow()
 
 
 #AUTO COLOR IN EMBED ACCORDING TO HIGHEST ROLE OF THE BOT
-def auto_color(ctx, embed):
-    roles = (ctx.message.guild.get_member(839638438055903242)).roles 
+def auto_color(ctx):
+    roles = (ctx.message.guild.get_member(ctx.me.id)).roles 
     roles.reverse()
-    embed.color = roles[0].color
+    return roles[0].color
+
+
+#CUSTOM EMBED
+def custom_embed(description, color, title = "Something doesn't seem right?"):
+    embed = discord.Embed(title = title, description = description, color = color)
+    return embed
 
 
 #BOT TYPING DELAY
-async def bot_typing(ctx, time):
+async def bot_typing(ctx, wait_time):
     await ctx.trigger_typing()
-    await asyncio.sleep(float(time))
+    await asyncio.sleep(float(wait_time))

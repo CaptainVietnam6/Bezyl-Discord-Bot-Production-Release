@@ -6,7 +6,7 @@ IF YOU WANT TO USE/COPY/MODIFY/REPRODUCE/RE-DISTRIBUTE THIS PROGRAM, YOU MUST IN
 Author Name(s): Kiet Pham
 Co-Author Name(s): Junle Yan
 Author Contact: kiet.riley2005@gmail.com, yanjunlereal@gmail.com
-Discord: CaptainVietnam6#0001, wholefood_doufu#9523
+Discord: CaptainVietnam6#0001, wholefood_doufu#0001
 Discord Server: https://discord.gg/3z76p8H5yj
 GitHub: https://github.com/CaptainVietnam6
 GitHub Repo: https://github.com/CaptainVietnam6/Bezyl-Discord-Bot-Production-Release
@@ -28,6 +28,7 @@ from os import system
 import random
 from random import randint
 import time
+import datetime as datetime
 import youtube_dl
 import shutil
 import asyncio
@@ -115,21 +116,34 @@ async def on_ready():
     await channel.connect()
 
 
-#RETURNS THE BOT'S PING IN MILLISECONDS
+# RETURNS THE BOT'S PING IN MILLISECONDS
 @client.command()
 async def ping(ctx):
-    print(f"ping: {round(client.latency * 1000)}ms")
-    embed = discord.Embed()
-    embed = discord.Embed(
-        title = "Websocket Latency:",
-        description = f"`{round(client.latency * 1000)}ms`",
-        color = bot_color
-    )
-    requested_by(ctx, embed)
-    auto_color(ctx, embed)
+    # Latency Calculation
+    start_time_b = datetime.datetime.now()
+    await client.fetch_user(int(ctx.author.id))
+    elapsed_b = datetime.datetime.now() - start_time_b
+    restapilatency = str(round(elapsed_b.total_seconds()*1000, 4))
+    before_ws = str(round(client.latency * 1000, 4))
 
-    await bot_typing(ctx, 0.15)
-    await ctx.send(embed = embed)
+    embed = discord.Embed(
+        title = "Latency",
+        description = "Successfully Received Message",
+        color = auto_color(ctx)
+    )
+    embed.add_field(
+        name = f"Websocket Latency:", 
+        value = f"`{before_ws}` ms", 
+        inline = False
+    )
+    embed.add_field(
+        name = f"REST API Latency:", 
+        value = f"`{restapilatency}` ms", 
+        inline = False
+    )
+
+    requested_by(ctx, embed)#, auto_color(ctx, embed)
+    await bot_typing(ctx, 0.15), await ctx.reply(embed = embed, mention_author = False)
 
 
 #SERVER COLOR HEX CODE REMINDER THINGY
@@ -137,25 +151,25 @@ async def ping(ctx):
 @client.command(aliases = ["botcolor"])
 async def _bothexcode(ctx):
     await bot_typing(ctx, 0.15)
-    await ctx.send("The bot theme hex code is **#ff0000** (this is the average colour of the gradient in our pfp)")
+    await ctx.reply("The bot's theme color hex code is **#ff0000** (this is the average colour of the gradient in our pfp)", mention_author = False)
 
 
 #SEND INVITE LINK FOR BOT
 @client.command(aliases = ["invite"])
 async def _invite(ctx):
     await bot_typing(ctx, 0.15)
-    await ctx.send("https://discord.com/api/oauth2/authorize?client_id=839638438055903242&permissions=0&scope=bot")
+    await ctx.reply("https://discord.com/api/oauth2/authorize?client_id=839638438055903242&permissions=0&scope=bot", mention_author = False)
 
 
 #SEND LINK TO DOCS
 @client.command(aliases = ["docs"])
 async def _documentation(ctx):
     await bot_typing(ctx, 0.15)
-    await ctx.send("https://docs.google.com/document/d/1dNQBnMU0YK7g8-pjC77wViGKHBHNnE1NKbocAIf5HBA/edit?usp=sharing")
+    await ctx.reply("https://docs.google.com/document/d/1dNQBnMU0YK7g8-pjC77wViGKHBHNnE1NKbocAIf5HBA/edit?usp=sharing", mention_author = False)
 
 
 #KEEP ALIVE COMMAND FOR WEBSERVER
-keep_alive()
+keep_alive() 
 
 #BOT TOKEN TO CONNECT TO DISCORD'S API
 #this is the bot's token and will be required for the IDE to connect with discord's API

@@ -10,6 +10,7 @@ from discord.ext.commands import BucketType
 from discord import FFmpegPCMAudio
 
 #other important imports for system
+import re
 import os
 from os import system
 import random
@@ -22,10 +23,7 @@ import PyDictionary
 from PyDictionary import PyDictionary
 
 #imports from other files
-from constants import bot_color
-from constants import auto_color
-from constants import bot_typing
-from constants import requested_by
+from constants import auto_color, bot_typing, requested_by, custom_embed
 
 
 class Cogs(commands.Cog):
@@ -36,7 +34,6 @@ class Cogs(commands.Cog):
     @commands.command(aliases = ["cogs_moderation"])
     async def _cogs_moderation(self, ctx):
         await ctx.send("moderation cog works yay")
-
     
     #MEMBER ID GET
     @commands.command(aliases = ["id", "getid"])
@@ -44,9 +41,8 @@ class Cogs(commands.Cog):
         embed = discord.Embed(
             title = "Requested User ID",
             description = f"{user.id}",
-            color = bot_color #first declare color variable when using auto_color
+            color = auto_color(ctx)
         )
-        auto_color(ctx, embed) #function cannot be called inside the embed, change outside
         requested_by(ctx, embed)
 
         await bot_typing(ctx, 0.15)
@@ -54,92 +50,207 @@ class Cogs(commands.Cog):
 
 
     #VOTEKICK COMMAND
-    @commands.command(aliases = ["votekick"])
+    @commands.command(aliases = ["votemod"])
     @commands.cooldown(1, 60, BucketType.guild)
-    async def _votekick(self, ctx, user_tag, *, kick_reason = "None Provided"): 
-        thumbs_down = "👎"
-        thumbs_up = "👍"
-        embed = discord.Embed(
-            title = "Votekick Member",
-            description = f"Votekick for member {user_tag}\nReason: {kick_reason}",
-            color = bot_color
-        )
-        auto_color(ctx, embed) 
-        requested_by(ctx, embed)
-
-        await bot_typing(ctx, 0.15)
-        embed_message = await ctx.send(embed = embed)
-        await embed_message.add_reaction(thumbs_up)
-        await embed_message.add_reaction(thumbs_down)
-    
-    #cooldown error for Votekick command
-    @_votekick.error
-    async def _votekick_error(self, ctx, error):
-        if isinstance(error, commands.CommandOnCooldown):
+    async def _votemod(self, ctx, member: str, *, reason = "None provided"): 
+        try:
+            member = await discord.ext.commands.MemberConverter().convert(ctx, member) #create user object using mention or id
+            thumbs_down, thumbs_up = "👎", "👍"
+            embed = custom_embed(f"Vote to take actions against {member.mention}", auto_color(ctx), "Poll Started")
+            embed.add_field(name = "**Reason**", value = reason)
+            requested_by(ctx, embed, "Initialized"), embed.set_thumbnail(url = member.avatar_url)
             await bot_typing(ctx, 0.15)
-            await ctx.send(f"Command on cooldown wait {error.retry_after:.2f} seconds")
+            embed_message = await ctx.reply(embed = embed, mention_author = False)
+            await embed_message.add_reaction(thumbs_up), await embed_message.add_reaction(thumbs_down)
+        except: # error response for invalid mention or id
+            embed = custom_embed(f"User: `{member}` could not be found!", auto_color(ctx))
+            requested_by(ctx, embed)
+            await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
+
+    #cooldown error for votekick command
+    @_votemod.error
+    async def _votemod_error(self, ctx, error):
+        if isinstance(error, commands.CommandOnCooldown):
+            embed = custom_embed(f"This command is on cooldown. Try again in {error.retry_after:.2f} seconds", auto_color(ctx))
+            requested_by(ctx, embed)
+            await bot_typing(ctx, 0.15), await ctx.reply(embed = embed, mention_author = False)
+        elif isinstance(error, commands.MissingRequiredArgument): # error response for if the bot doesnt have perm
+            embed = custom_embed("One or more of the paramaters needed for this command is missing.", auto_color(ctx))
+            requested_by(ctx, embed)
+            await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
+        else:
+            raise
 
     
     #KICK COMMAND
     @commands.command(aliases = ["kick"])
-    #@commands.has_permissions(kick_members = True)
-    async def _kick(self, ctx, member: str, *, reason = "None provided"):
+    @commands.has_permissions(kick_members = True)
+    @commands.bot_has_permissions(kick_members = True)
+    async def _kick(self, ctx, member: str, *, reason = "Moderator did not specify a reason."):
         try: 
-            member = await discord.ext.commands.MemberConverter().convert(ctx, member)
+            member = await discord.ext.commands.MemberConverter().convert(ctx, member) # creates user object using id or mention
+            if str(ctx.author.id) != str(member.id): # check if user object is the author of command
+                if ctx.author.top_role > member.top_role: # check if author have a higher rank than the user object
+                    if ctx.me.top_role > member.top_role: # check if bot have a higher rank than the user object
+                        embed = custom_embed(f"Kicked User: {member.mention}", auto_color(ctx), "Successfully Kicked")
+                        dm_embed = custom_embed(f"You have been kicked out of {ctx.guild.name} by {ctx.author.mention} \n for the following reason: \n ```{reason}```", auto_color(ctx), "Kicked")
+                        embed.add_field(name = "**Reason**", value = f"{reason}"), requested_by(ctx, embed)
+                        await bot_typing(ctx, 0.1), await member.kick(reason = reason), await ctx.reply(embed = embed, mention_author = False), await member.send(embed = dm_embed)
+                    else: 
+                        embed = custom_embed("I can only kick members below my rank.", auto_color(ctx))
+                        requested_by(ctx, embed)
+                        await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
+                else:
+                    embed = custom_embed("You can only kick members below your rank.", auto_color(ctx))
+                    requested_by(ctx, embed)
+                    await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
+            else: 
+                embed = custom_embed("You can't kick yourself!", auto_color(ctx))
+                requested_by(ctx, embed)
+                await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
         except discord.ext.commands.errors.BadArgument:
-            try:
-                # fetch user with id if member not mention
-                member = await self.bot.fetch_user(int(member))
-            except:
-                return
-        
-        embed = discord.Embed(
-            title = "User Kicked",
-            description = f"Kicked User <@{member}>\nReason: {reason}",
-            color = bot_color
-        )
-        auto_color(ctx, embed) 
-        requested_by(ctx, embed)
+            # error response for invalid member parameter and id
+            embed = custom_embed(f"User: `{member}` could not be found!", auto_color(ctx))
+            requested_by(ctx, embed)
+            await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
+            
 
-        await bot_typing(ctx, 0.15)
-        await member.kick(reason = reason)
-        await ctx.send(embed = embed)
+    #error for kick command
+    @_kick.error
+    async def _kick_error(self, ctx, error):
+        if isinstance(error, commands.MissingPermissions): # error response for if the author doesnt have perm
+            embed = custom_embed("You do not have permission to use `kick`.", auto_color(ctx))
+            requested_by(ctx, embed)
+            await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
+        elif isinstance(error, commands.BotMissingPermissions): # error response for if the bot doesnt have perm
+            embed = custom_embed("I am missing the permissions needed to perform this action.", auto_color(ctx))
+            requested_by(ctx, embed)
+            await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
+        elif isinstance(error, commands.MissingRequiredArgument): # error response for if the bot doesnt have perm
+            embed = custom_embed("One or more of the paramaters needed for this command is missing.", auto_color(ctx))
+            requested_by(ctx, embed)
+            await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
+        elif isinstance(error, commands.CommandInvokeError): # error response for if the bot doesnt have perm
+            pass
+        else:
+            raise
 
-    #error for kick commands
-    #@_kick.error
-    #async def _kick_error(self, ctx, error):
-        #await bot_typing(ctx, 0.15)
-        #await ctx.send("Error: No kick permissions or invalid parameter")
 
     #BAN COMMAND
     @commands.command(aliases = ["ban"])
     @commands.has_permissions(ban_members = True)
-    async def _ban(self, ctx, member: str, *, reason = "None provided"):
+    @commands.bot_has_permissions(ban_members = True)
+    async def _ban(self, ctx, member: str, *, reason = "Moderator did not specify a reason."):
         try: 
-            member = await discord.ext.commands.MemberConverter().convert(ctx, member)
-        except discord.ext.commands.errors.BadArgument:
+            member = await discord.ext.commands.MemberConverter().convert(ctx, member) # creates user object using mention or id
+            if str(ctx.author.id) != str(member.id): # check if user object is the author
+                if ctx.author.top_role > member.top_role: # check if author have higher rank than the user object
+                    if ctx.me.top_role > member.top_role: # check if bot have higher rank than the user object
+                        embed = custom_embed(f"Banned User: {member.mention}", auto_color(ctx), "Successfully Banned")
+                        dm_embed = custom_embed(f"You have been banned from {ctx.guild.name} by {ctx.author.mention} \n for the following reason: \n ```{reason}```", auto_color(ctx), "Banned")
+                        embed.add_field(name = "**Reason**", value = f"{reason}"), requested_by(ctx, embed)
+                        await bot_typing(ctx, 0.1), await member.ban(reason = reason), await ctx.reply(embed = embed, mention_author = False), await member.send(embed = dm_embed)
+                    else: 
+                        embed = custom_embed(f"I can only ban members below my rank.", auto_color(ctx))
+                        requested_by(ctx, embed)
+                        await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
+                else:
+                    embed = custom_embed(f"You can only ban members below your rank.", auto_color(ctx))
+                    requested_by(ctx, embed)
+                    await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
+            else: 
+                embed = custom_embed(f"You can't ban yourself!", auto_color(ctx))
+                requested_by(ctx, embed)
+                await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
+        except:
             try:
-                # fetch user with id if member not mention
-                member = await self.bot.fetch_user(int(member))
-            except:
-                return
-        embed = discord.Embed(
-            title = "User Banned",
-            description = f"Banned User {member}\nReason: {reason}",
-            color = bot_color
-        )
-        auto_color(ctx, embed) 
-        requested_by(ctx, embed)
+                user = await self.client.fetch_user(member) # handles user outside of the server
+                await ctx.guild.ban(user)
+                embed = custom_embed(f"User: {user.mention} is now prohibited from entering the server!", auto_color(ctx), "Successfully Banned")
+                embed.add_field(name = "**Reason**", value = f"{reason}"), requested_by(ctx, embed)
+                await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
+            except: # error response for invalid user id or mention
+                embed = custom_embed(f"User: `{member}` could not be found!", auto_color(ctx))
+                requested_by(ctx, embed)
+                await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
+                raise
 
-        await bot_typing(ctx, 0.15)
-        await member.ban(reason = reason)
-        await ctx.send(embed = embed)
-
-    #error for kick commands
+    #error for ban command
     @_ban.error
     async def _ban_error(self, ctx, error):
-        await bot_typing(ctx, 0.15)
-        await ctx.send("Error: No kick permissions or invalid parameter")
+        if isinstance(error, commands.MissingPermissions): # error response for if the author doesnt have perm
+            embed = custom_embed("You do not have permission to use `ban`.", auto_color(ctx))
+            requested_by(ctx, embed), 
+            await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
+        elif isinstance(error, commands.BotMissingPermissions): # error response for if the bot doesnt have perm
+            embed = custom_embed("I am missing the permissions needed to perform this action.", auto_color(ctx))
+            requested_by(ctx, embed), 
+            await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
+        elif isinstance(error, commands.MissingRequiredArgument): # error response for if the bot doesnt have perm
+            embed = custom_embed("One or more of the paramaters needed for this command is missing.", auto_color(ctx))
+            requested_by(ctx, embed)
+            await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
+        else:
+            raise
+
+
+    #UNBAN COMMAND
+    @commands.command(aliases = ["unban"])
+    @commands.has_permissions(ban_members = True)
+    @commands.bot_has_permissions(ban_members = True)
+    async def _unban(self, ctx, *, member: int):
+        try:
+            user = await self.client.fetch_user(member) #fetch user object from id
+            try:
+                await ctx.guild.fetch_ban(user) # this single line checks if the user is banned, returns an error if isnt banned
+                embed = custom_embed(f"{user.mention} got unbanned!", auto_color(ctx), "Successfully Unbanned")
+                requested_by(ctx, embed)
+                await ctx.guild.unban(user), await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
+            except discord.NotFound: # error response for user that hasn't been banned
+                embed = custom_embed(f"User: {user.mention} haven't been banned before.", auto_color(ctx))
+                requested_by(ctx, embed), 
+                await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
+        except: # error response for invalid user id
+            embed = custom_embed(f"User: `{member}` could not be found!", auto_color(ctx))
+            requested_by(ctx, embed)
+            await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
+            raise
+              
+    #error for unban command
+    @_unban.error
+    async def _unban_error(self, ctx, error):
+        if isinstance(error, commands.MissingPermissions): # error response for if the author doesnt have perm
+            embed = custom_embed("You do not have permission to use `unban`.", auto_color(ctx))
+            requested_by(ctx, embed), 
+            await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
+        elif isinstance(error, commands.BotMissingPermissions): # error response for if the bot doesnt have perm
+            embed = custom_embed("I am missing the permissions needed to perform this action.", auto_color(ctx))
+            requested_by(ctx, embed), 
+            await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
+        elif isinstance(error, commands.MissingRequiredArgument): # error response for if the bot doesnt have perm
+            embed = custom_embed("One or more of the paramaters needed for this command is missing.", auto_color(ctx))
+            requested_by(ctx, embed)
+            await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
+        else:
+            raise
+
+
+    #WARN COMMAND
+    @commands.command(aliases = ['warn'])
+    @commands.check_any(commands.has_permissions(kick_members = True, ban_members = True))
+    async def _warn(self, ctx, member: str, *, reason = "None provided"):
+        try:
+            member = await discord.ext.commands.MemberConverter().convert(ctx, member) #fetch user object from id
+            embed = custom_embed(f"Warned User: {member.mention}", auto_color(ctx), "Warning Sent")
+            dm_embed = custom_embed(f"You have received a warning \nfrom {ctx.guild.name} sent by {ctx.author.mention} \n for the following: \n ```{reason}```", auto_color(ctx), "Warning")
+            embed.add_field(name = "**Reason**", value = f"{reason}"), requested_by(ctx, embed)
+            await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False), await member.send(embed = dm_embed)
+
+        except: # error response for invalid user id
+            embed = custom_embed(f"User: `{member}` could not be found!", auto_color(ctx))
+            requested_by(ctx, embed)
+            await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
+            raise
 
 
 def setup(client):
