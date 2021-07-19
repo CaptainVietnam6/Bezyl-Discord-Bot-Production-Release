@@ -1,5 +1,5 @@
 #this is the file for any universal declarations or defines or whatever that will be imported into other files
-#just do "from constants import {function_name}" to get iter
+#just do "from constants import {function_name}" to get it
 
 #imports related to discord or discord packages
 import discord

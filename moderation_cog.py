@@ -10,7 +10,6 @@ from discord.ext.commands import BucketType
 from discord import FFmpegPCMAudio
 
 #other important imports for system
-import re
 import os
 from os import system
 import random
@@ -58,14 +57,18 @@ class Cogs(commands.Cog):
             thumbs_down, thumbs_up = "👎", "👍"
             embed = custom_embed(f"Vote to take actions against {member.mention}", auto_color(ctx), "Poll Started")
             embed.add_field(name = "**Reason**", value = reason)
-            requested_by(ctx, embed, "Initialized"), embed.set_thumbnail(url = member.avatar_url)
+            requested_by(ctx, embed, "Initialized")
+            embed.set_thumbnail(url = member.avatar_url)
             await bot_typing(ctx, 0.15)
             embed_message = await ctx.reply(embed = embed, mention_author = False)
-            await embed_message.add_reaction(thumbs_up), await embed_message.add_reaction(thumbs_down)
+            await embed_message.add_reaction(thumbs_up)
+            await embed_message.add_reaction(thumbs_down)
+
         except: # error response for invalid mention or id
             embed = custom_embed(f"User: `{member}` could not be found!", auto_color(ctx))
             requested_by(ctx, embed)
-            await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
+            await bot_typing(ctx, 0.15)
+            await ctx.reply(embed = embed, mention_author = False)
 
     #cooldown error for votekick command
     @_votemod.error
@@ -73,11 +76,15 @@ class Cogs(commands.Cog):
         if isinstance(error, commands.CommandOnCooldown):
             embed = custom_embed(f"This command is on cooldown. Try again in {error.retry_after:.2f} seconds", auto_color(ctx))
             requested_by(ctx, embed)
-            await bot_typing(ctx, 0.15), await ctx.reply(embed = embed, mention_author = False)
+            await bot_typing(ctx, 0.15)
+            await ctx.reply(embed = embed, mention_author = False)
+        
         elif isinstance(error, commands.MissingRequiredArgument): # error response for if the bot doesnt have perm
             embed = custom_embed("One or more of the paramaters needed for this command is missing.", auto_color(ctx))
             requested_by(ctx, embed)
-            await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
+            await bot_typing(ctx, 0.15)
+            await ctx.reply(embed = embed, mention_author = False)
+        
         else:
             raise
 
@@ -94,25 +101,34 @@ class Cogs(commands.Cog):
                     if ctx.me.top_role > member.top_role: # check if bot have a higher rank than the user object
                         embed = custom_embed(f"Kicked User: {member.mention}", auto_color(ctx), "Successfully Kicked")
                         dm_embed = custom_embed(f"You have been kicked out of {ctx.guild.name} by {ctx.author.mention} \n for the following reason: \n ```{reason}```", auto_color(ctx), "Kicked")
-                        embed.add_field(name = "**Reason**", value = f"{reason}"), requested_by(ctx, embed)
-                        await bot_typing(ctx, 0.1), await member.kick(reason = reason), await ctx.reply(embed = embed, mention_author = False), await member.send(embed = dm_embed)
+                        embed.add_field(name = "**Reason**", value = f"{reason}")
+                        requested_by(ctx, embed)
+                        await bot_typing(ctx, 0.15)
+                        await member.kick(reason = reason)
+                        await ctx.reply(embed = embed, mention_author = False)
+                        await member.send(embed = dm_embed)
                     else: 
                         embed = custom_embed("I can only kick members below my rank.", auto_color(ctx))
                         requested_by(ctx, embed)
-                        await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
+                        await bot_typing(ctx, 0.15)
+                        await ctx.reply(embed = embed, mention_author = False)
                 else:
                     embed = custom_embed("You can only kick members below your rank.", auto_color(ctx))
                     requested_by(ctx, embed)
-                    await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
+                    await bot_typing(ctx, 0.15)
+                    await ctx.reply(embed = embed, mention_author = False)
             else: 
                 embed = custom_embed("You can't kick yourself!", auto_color(ctx))
                 requested_by(ctx, embed)
-                await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
+                await bot_typing(ctx, 0.15)
+                await ctx.reply(embed = embed, mention_author = False)
+
         except discord.ext.commands.errors.BadArgument:
             # error response for invalid member parameter and id
             embed = custom_embed(f"User: `{member}` could not be found!", auto_color(ctx))
             requested_by(ctx, embed)
-            await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
+            await bot_typing(ctx, 0.15)
+            await ctx.reply(embed = embed, mention_author = False)
             
 
     #error for kick command
@@ -121,15 +137,18 @@ class Cogs(commands.Cog):
         if isinstance(error, commands.MissingPermissions): # error response for if the author doesnt have perm
             embed = custom_embed("You do not have permission to use `kick`.", auto_color(ctx))
             requested_by(ctx, embed)
-            await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
+            await bot_typing(ctx, 0.15)
+            await ctx.reply(embed = embed, mention_author = False)
         elif isinstance(error, commands.BotMissingPermissions): # error response for if the bot doesnt have perm
             embed = custom_embed("I am missing the permissions needed to perform this action.", auto_color(ctx))
             requested_by(ctx, embed)
-            await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
+            await bot_typing(ctx, 0.15)
+            await ctx.reply(embed = embed, mention_author = False)
         elif isinstance(error, commands.MissingRequiredArgument): # error response for if the bot doesnt have perm
             embed = custom_embed("One or more of the paramaters needed for this command is missing.", auto_color(ctx))
             requested_by(ctx, embed)
-            await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
+            await bot_typing(ctx, 0.15)
+            await ctx.reply(embed = embed, mention_author = False)
         elif isinstance(error, commands.CommandInvokeError): # error response for if the bot doesnt have perm
             pass
         else:
@@ -148,48 +167,62 @@ class Cogs(commands.Cog):
                     if ctx.me.top_role > member.top_role: # check if bot have higher rank than the user object
                         embed = custom_embed(f"Banned User: {member.mention}", auto_color(ctx), "Successfully Banned")
                         dm_embed = custom_embed(f"You have been banned from {ctx.guild.name} by {ctx.author.mention} \n for the following reason: \n ```{reason}```", auto_color(ctx), "Banned")
-                        embed.add_field(name = "**Reason**", value = f"{reason}"), requested_by(ctx, embed)
-                        await bot_typing(ctx, 0.1), await member.ban(reason = reason), await ctx.reply(embed = embed, mention_author = False), await member.send(embed = dm_embed)
+                        embed.add_field(name = "**Reason**", value = f"{reason}")
+                        requested_by(ctx, embed)
+                        await bot_typing(ctx, 0.15)
+                        await member.ban(reason = reason)
+                        await ctx.reply(embed = embed, mention_author = False)
+                        await member.send(embed = dm_embed)
                     else: 
                         embed = custom_embed(f"I can only ban members below my rank.", auto_color(ctx))
                         requested_by(ctx, embed)
-                        await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
+                        await bot_typing(ctx, 0.15)
+                        await ctx.reply(embed = embed, mention_author = False)
                 else:
                     embed = custom_embed(f"You can only ban members below your rank.", auto_color(ctx))
                     requested_by(ctx, embed)
-                    await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
+                    await bot_typing(ctx, 0.15)
+                    await ctx.reply(embed = embed, mention_author = False)
             else: 
                 embed = custom_embed(f"You can't ban yourself!", auto_color(ctx))
                 requested_by(ctx, embed)
-                await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
+                await bot_typing(ctx, 0.15)
+                await ctx.reply(embed = embed, mention_author = False)
+
         except:
             try:
                 user = await self.client.fetch_user(member) # handles user outside of the server
                 await ctx.guild.ban(user)
                 embed = custom_embed(f"User: {user.mention} is now prohibited from entering the server!", auto_color(ctx), "Successfully Banned")
                 embed.add_field(name = "**Reason**", value = f"{reason}"), requested_by(ctx, embed)
-                await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
+                await bot_typing(ctx, 0.15),
+                await ctx.reply(embed = embed, mention_author = False)
+
             except: # error response for invalid user id or mention
                 embed = custom_embed(f"User: `{member}` could not be found!", auto_color(ctx))
                 requested_by(ctx, embed)
-                await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
+                await bot_typing(ctx, 0.15)
+                await ctx.reply(embed = embed, mention_author = False)
                 raise
 
     #error for ban command
     @_ban.error
     async def _ban_error(self, ctx, error):
-        if isinstance(error, commands.MissingPermissions): # error response for if the author doesnt have perm
+        if isinstance(error, commands.MissingPermissions): # error response for if the author doesnt have perms
             embed = custom_embed("You do not have permission to use `ban`.", auto_color(ctx))
             requested_by(ctx, embed), 
-            await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
-        elif isinstance(error, commands.BotMissingPermissions): # error response for if the bot doesnt have perm
+            await bot_typing(ctx, 0.15)
+            await ctx.reply(embed = embed, mention_author = False)
+        elif isinstance(error, commands.BotMissingPermissions): # error response for if the bot doesnt have perms
             embed = custom_embed("I am missing the permissions needed to perform this action.", auto_color(ctx))
             requested_by(ctx, embed), 
-            await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
-        elif isinstance(error, commands.MissingRequiredArgument): # error response for if the bot doesnt have perm
+            await bot_typing(ctx, 0.15)
+            await ctx.reply(embed = embed, mention_author = False)
+        elif isinstance(error, commands.MissingRequiredArgument): # error response for if the bot doesnt have perms
             embed = custom_embed("One or more of the paramaters needed for this command is missing.", auto_color(ctx))
             requested_by(ctx, embed)
-            await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
+            await bot_typing(ctx, 0.15)
+            await ctx.reply(embed = embed, mention_author = False)
         else:
             raise
 
@@ -205,15 +238,21 @@ class Cogs(commands.Cog):
                 await ctx.guild.fetch_ban(user) # this single line checks if the user is banned, returns an error if isnt banned
                 embed = custom_embed(f"{user.mention} got unbanned!", auto_color(ctx), "Successfully Unbanned")
                 requested_by(ctx, embed)
-                await ctx.guild.unban(user), await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
+                await ctx.guild.unban(user)
+                await bot_typing(ctx, 0.15)
+                await ctx.reply(embed = embed, mention_author = False)
+
             except discord.NotFound: # error response for user that hasn't been banned
                 embed = custom_embed(f"User: {user.mention} haven't been banned before.", auto_color(ctx))
                 requested_by(ctx, embed), 
-                await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
+                await bot_typing(ctx, 0.15)
+                await ctx.reply(embed = embed, mention_author = False)
+
         except: # error response for invalid user id
             embed = custom_embed(f"User: `{member}` could not be found!", auto_color(ctx))
             requested_by(ctx, embed)
-            await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
+            await bot_typing(ctx, 0.15)
+            await ctx.reply(embed = embed, mention_author = False)
             raise
               
     #error for unban command
@@ -222,15 +261,20 @@ class Cogs(commands.Cog):
         if isinstance(error, commands.MissingPermissions): # error response for if the author doesnt have perm
             embed = custom_embed("You do not have permission to use `unban`.", auto_color(ctx))
             requested_by(ctx, embed), 
-            await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
+            await bot_typing(ctx, 0.15)
+            await ctx.reply(embed = embed, mention_author = False)
+
         elif isinstance(error, commands.BotMissingPermissions): # error response for if the bot doesnt have perm
             embed = custom_embed("I am missing the permissions needed to perform this action.", auto_color(ctx))
             requested_by(ctx, embed), 
-            await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
+            await bot_typing(ctx, 0.15)
+            await ctx.reply(embed = embed, mention_author = False)
+
         elif isinstance(error, commands.MissingRequiredArgument): # error response for if the bot doesnt have perm
             embed = custom_embed("One or more of the paramaters needed for this command is missing.", auto_color(ctx))
             requested_by(ctx, embed)
-            await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
+            await bot_typing(ctx, 0.15)
+            await ctx.reply(embed = embed, mention_author = False)
         else:
             raise
 
@@ -243,13 +287,17 @@ class Cogs(commands.Cog):
             member = await discord.ext.commands.MemberConverter().convert(ctx, member) #fetch user object from id
             embed = custom_embed(f"Warned User: {member.mention}", auto_color(ctx), "Warning Sent")
             dm_embed = custom_embed(f"You have received a warning \nfrom {ctx.guild.name} sent by {ctx.author.mention} \n for the following: \n ```{reason}```", auto_color(ctx), "Warning")
-            embed.add_field(name = "**Reason**", value = f"{reason}"), requested_by(ctx, embed)
-            await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False), await member.send(embed = dm_embed)
+            embed.add_field(name = "**Reason**", value = f"{reason}")
+            requested_by(ctx, embed)
+            await bot_typing(ctx, 0.15)
+            await ctx.reply(embed = embed, mention_author = False)
+            await member.send(embed = dm_embed)
 
         except: # error response for invalid user id
             embed = custom_embed(f"User: `{member}` could not be found!", auto_color(ctx))
             requested_by(ctx, embed)
-            await bot_typing(ctx, 0.1), await ctx.reply(embed = embed, mention_author = False)
+            await bot_typing(ctx, 0.15)
+            await ctx.reply(embed = embed, mention_author = False)
             raise
 
 
